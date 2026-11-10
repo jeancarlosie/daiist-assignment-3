@@ -1,0 +1,189 @@
+## reg-2019-945-recitals
+   133  Preamble
+  3496  Recitals
+## reg-2019-945
+    21  Preamble
+     4  Chapter I
+   114  Chapter I > Article 1
+   204  Chapter I > Article 2
+  1272  Chapter I > Article 3
+    30  Chapter II
+     4  Chapter II > Section 1
+   105  Chapter II > Section 1 > Article 4
+   161  Chapter II > Section 1 > Article 5
+     6  Chapter II > Section 2
+   782  Chapter II > Section 2 > Article 6
+   181  Chapter II > Section 2 > Article 7
+   674  Chapter II > Section 2 > Article 8
+   435  Chapter II > Section 2 > Article 9
+    75  Chapter II > Section 2 > Article 10
+    79  Chapter II > Section 2 > Article 11
+     6  Chapter II > Section 3
+    62  Chapter II > Section 3 > Article 12
+   198  Chapter II > Section 3 > Article 13
+   292  Chapter II > Section 3 > Article 14
+    28  Chapter II > Section 3 > Article 15
+   312  Chapter II > Section 3 > Article 16
+   212  Chapter II > Section 3 > Article 17
+     7  Chapter II > Section 4
+    27  Chapter II > Section 4 > Article 18
+   159  Chapter II > Section 4 > Article 19
+   125  Chapter II > Section 4 > Article 20
+    46  Chapter II > Section 4 > Article 21
+   941  Chapter II > Section 4 > Article 22
+    69  Chapter II > Section 4 > Article 23
+   130  Chapter II > Section 4 > Article 24
+    89  Chapter II > Section 4 > Article 25
+   146  Chapter II > Section 4 > Article 26
+    86  Chapter II > Section 4 > Article 27
+   135  Chapter II > Section 4 > Article 28
+   145  Chapter II > Section 4 > Article 29
+   271  Chapter II > Section 4 > Article 30
+    24  Chapter II > Section 4 > Article 31
+   169  Chapter II > Section 4 > Article 32
+    26  Chapter II > Section 4 > Article 33
+    57  Chapter II > Section 4 > Article 34
+    16  Chapter II > Section 5
+   168  Chapter II > Section 5 > Article 35
+   660  Chapter II > Section 5 > Article 36
+   219  Chapter II > Section 5 > Article 37
+   277  Chapter II > Section 5 > Article 38
+   258  Chapter II > Section 5 > Article 39
+    18  Chapter III
+   809  Chapter III > Article 40
+     5  Chapter IV
+   180  Chapter IV > Article 41
+     4  Chapter V
+    43  Chapter V > Article 42
+     1  Annex
+   392  Annex > Part 1
+  1373  Annex > Part 2
+  1406  Annex > Part 3
+  1261  Annex > Part 4
+   267  Annex > Part 5
+   322  Annex > Part 6
+   302  Annex > Part 7
+  1425  Annex > Part 8
+  1267  Annex > Part 9
+   350  Annex > Part 10
+   328  Annex > Part 11
+   130  Annex > Part 12
+   459  Annex > Part 13
+    79  Annex > Part 14
+    83  Annex > Part 15
+   532  Annex > Part 16
+   381  Annex > Part 17
+## reg-2019-947-recitals
+   133  Preamble
+  1489  Recitals
+## reg-2019-947
+    25  Preamble
+    31  Article 1
+  1184  Article 2
+   204  Article 3
+   206  Article 4
+   333  Article 5
+   153  Article 6
+   374  Article 7
+   168  Article 8
+   301  Article 9
+    65  Article 10
+   740  Article 11
+   668  Article 12
+   443  Article 13
+   532  Article 14
+   168  Article 15
+   307  Article 16
+    82  Article 17
+   393  Article 18
+   303  Article 19
+   133  Article 20
+   121  Article 21
+   266  Article 22
+   149  Article 23
+     9  Annex
+     8  Annex > Part A
+   214  Annex > Part A > UAS.OPEN.010
+   405  Annex > Part A > UAS.OPEN.020
+   354  Annex > Part A > UAS.OPEN.030
+   268  Annex > Part A > UAS.OPEN.040
+   285  Annex > Part A > UAS.OPEN.050
+   438  Annex > Part A > UAS.OPEN.060
+   173  Annex > Part A > UAS.OPEN.070
+     8  Annex > Part B
+    74  Annex > Part B > UAS.SPEC.010
+   411  Annex > Part B > UAS.SPEC.020
+   225  Annex > Part B > UAS.SPEC.030
+   107  Annex > Part B > UAS.SPEC.040
+   825  Annex > Part B > UAS.SPEC.050
+   319  Annex > Part B > UAS.SPEC.060
+    12  Annex > Part B > UAS.SPEC.070
+    86  Annex > Part B > UAS.SPEC.080
+   103  Annex > Part B > UAS.SPEC.085
+    69  Annex > Part B > UAS.SPEC.090
+   156  Annex > Part B > UAS.SPEC.100
+     7  Annex > Part C
+   132  Annex > Part C > UAS.LUC.010
+   188  Annex > Part C > UAS.LUC.020
+   380  Annex > Part C > UAS.LUC.030
+   177  Annex > Part C > UAS.LUC.040
+    72  Annex > Part C > UAS.LUC.050
+    65  Annex > Part C > UAS.LUC.060
+    53  Annex > Part C > UAS.LUC.070
+    30  Annex > Part C > UAS.LUC.075
+    81  Annex > Part C > UAS.LUC.080
+    69  Annex > Part C > UAS.LUC.090
+     8  Annex > Appendix 1
+    14  Annex > Appendix 1 > Chapter I
+   130  Annex > Appendix 1 > Chapter I > UAS.STS-01.010
+   586  Annex > Appendix 1 > Chapter I > UAS.STS-01.020
+   382  Annex > Appendix 1 > Chapter I > UAS.STS-01.030
+  1226  Annex > Appendix 1 > Chapter I > UAS.STS-01.040
+    18  Annex > Appendix 1 > Chapter II
+   130  Annex > Appendix 1 > Chapter II > UAS.STS-02.010
+   677  Annex > Appendix 1 > Chapter II > UAS.STS-02.020
+   511  Annex > Appendix 1 > Chapter II > UAS.STS-02.030
+   282  Annex > Appendix 1 > Chapter II > UAS.STS-02.040
+   227  Annex > Appendix 1 > Chapter II > UAS.STS-02.050
+   220  Annex > Appendix 2
+   931  Annex > Appendix 3
+   263  Annex > Appendix 4
+   866  Annex > Appendix 5
+   272  Annex > Appendix 6
+## reg-2021-664-recitals
+   134  Preamble
+  1761  Recitals
+## reg-2021-664
+    20  Preamble
+     6  Chapter I
+   198  Chapter I > Article 1
+   260  Chapter I > Article 2
+     8  Chapter II
+   316  Chapter II > Article 3
+    67  Chapter II > Article 4
+   461  Chapter II > Article 5
+    11  Chapter III
+   353  Chapter III > Article 6
+   232  Chapter III > Article 7
+     4  Chapter IV
+   251  Chapter IV > Article 8
+    96  Chapter IV > Article 9
+   452  Chapter IV > Article 10
+   137  Chapter IV > Article 11
+   158  Chapter IV > Article 12
+   117  Chapter IV > Article 13
+    13  Chapter V
+   170  Chapter V > Article 14
+   386  Chapter V > Article 15
+   155  Chapter V > Article 16
+     6  Chapter VI
+   119  Chapter VI > Article 17
+   381  Chapter VI > Article 18
+    52  Chapter VI > Article 19
+   271  Annex I
+   100  Annex II
+   268  Annex III
+   113  Annex IV
+   165  Annex V
+   220  Annex VI
+   389  Annex VII
