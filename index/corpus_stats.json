@@ -4,18 +4,19 @@
       "source": "reg-2019-945-recitals",
       "title": "Recitals of Delegated Regulation (EU) 2019/945 (original Official Journal text)",
       "url": "https://eur-lex.europa.eu/eli/reg_del/2019/945/oj/eng",
+      "date": "11.6.2019 (OJ L 152)",
       "licence": "© European Union, EUR-Lex. Reuse authorised provided the source is acknowledged (Commission Decision 2011/833/EU).",
       "file": "corpus/reg-2019-945-recitals.pdf",
       "pages": 40,
-      "words": 3629,
+      "words": 3624,
       "cleaning": {
         "headers_removed": 0,
-        "noise_lines_removed": 120,
+        "noise_lines_removed": 160,
         "soft_hyphens_joined": 15,
         "front_matter_lines_skipped": 3,
         "hyphens_joined": 0,
         "hyphens_kept": 0,
-        "words_after_recitals_dropped": 18360
+        "words_after_recitals_dropped": 18325
       },
       "chunks": {
         "structure": 19,
@@ -26,6 +27,7 @@
       "source": "reg-2019-945",
       "title": "Commission Delegated Regulation (EU) 2019/945 (unmanned aircraft systems and classes)",
       "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32019R0945",
+      "date": "24.06.2025",
       "licence": "© European Union, EUR-Lex. Reuse authorised provided the source is acknowledged (Commission Decision 2011/833/EU).",
       "file": "corpus/reg-2019-945.pdf",
       "pages": 57,
@@ -34,6 +36,7 @@
         "headers_removed": 57,
         "noise_lines_removed": 0,
         "soft_hyphens_joined": 91,
+        "version_date": "24.06.2025",
         "front_matter_lines_skipped": 29,
         "hyphens_joined": 0,
         "hyphens_kept": 12
@@ -47,18 +50,19 @@
       "source": "reg-2019-947-recitals",
       "title": "Recitals of Implementing Regulation (EU) 2019/947 (original Official Journal text)",
       "url": "https://eur-lex.europa.eu/eli/reg_impl/2019/947/oj/eng",
+      "date": "11.6.2019 (OJ L 152)",
       "licence": "© European Union, EUR-Lex. Reuse authorised provided the source is acknowledged (Commission Decision 2011/833/EU).",
       "file": "corpus/reg-2019-947-recitals.pdf",
       "pages": 27,
-      "words": 1622,
+      "words": 1620,
       "cleaning": {
         "headers_removed": 0,
-        "noise_lines_removed": 81,
+        "noise_lines_removed": 108,
         "soft_hyphens_joined": 9,
         "front_matter_lines_skipped": 0,
         "hyphens_joined": 0,
         "hyphens_kept": 0,
-        "words_after_recitals_dropped": 11736
+        "words_after_recitals_dropped": 11711
       },
       "chunks": {
         "structure": 9,
@@ -69,6 +73,7 @@
       "source": "reg-2019-947",
       "title": "Commission Implementing Regulation (EU) 2019/947 (operation of unmanned aircraft)",
       "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32019R0947",
+      "date": "01.05.2025",
       "licence": "© European Union, EUR-Lex. Reuse authorised provided the source is acknowledged (Commission Decision 2011/833/EU).",
       "file": "corpus/reg-2019-947.pdf",
       "pages": 61,
@@ -77,6 +82,7 @@
         "headers_removed": 61,
         "noise_lines_removed": 0,
         "soft_hyphens_joined": 56,
+        "version_date": "01.05.2025",
         "front_matter_lines_skipped": 40,
         "hyphens_joined": 0,
         "hyphens_kept": 2
@@ -90,18 +96,19 @@
       "source": "reg-2021-664-recitals",
       "title": "Recitals of Implementing Regulation (EU) 2021/664 (original Official Journal text)",
       "url": "https://eur-lex.europa.eu/eli/reg_impl/2021/664/oj/eng",
+      "date": "23.4.2021 (OJ L 139)",
       "licence": "© European Union, EUR-Lex. Reuse authorised provided the source is acknowledged (Commission Decision 2011/833/EU).",
       "file": "corpus/reg-2021-664-recitals.pdf",
       "pages": 23,
-      "words": 1895,
+      "words": 1893,
       "cleaning": {
         "headers_removed": 0,
-        "noise_lines_removed": 69,
+        "noise_lines_removed": 81,
         "soft_hyphens_joined": 0,
         "front_matter_lines_skipped": 0,
         "hyphens_joined": 0,
         "hyphens_kept": 0,
-        "words_after_recitals_dropped": 5922
+        "words_after_recitals_dropped": 5912
       },
       "chunks": {
         "structure": 10,
@@ -112,6 +119,7 @@
       "source": "reg-2021-664",
       "title": "Commission Implementing Regulation (EU) 2021/664 (U-space regulatory framework)",
       "url": "https://eur-lex.europa.eu/eli/reg_impl/2021/664/2026-02-22/eng/pdf",
+      "date": "22.02.2026",
       "licence": "© European Union, EUR-Lex. Reuse authorised provided the source is acknowledged (Commission Decision 2011/833/EU).",
       "file": "corpus/reg-2021-664.pdf",
       "pages": 24,
@@ -120,6 +128,7 @@
         "headers_removed": 24,
         "noise_lines_removed": 0,
         "soft_hyphens_joined": 22,
+        "version_date": "22.02.2026",
         "front_matter_lines_skipped": 19,
         "hyphens_joined": 0,
         "hyphens_kept": 1
@@ -130,7 +139,7 @@
       }
     }
   ],
-  "total_words": 53920,
+  "total_words": 53911,
   "designs": {
     "structure": {
       "chunks": 302,
@@ -139,7 +148,7 @@
     },
     "fixed": {
       "chunks": 271,
-      "mean_words": 247.9,
+      "mean_words": 247.8,
       "max_words": 250
     }
   },
@@ -147,5 +156,5 @@
     "model": "gemini-embedding-2",
     "dimensions": 768
   },
-  "built_at": "2026-11-10T12:21:16+00:00"
+  "built_at": "2026-11-10T18:45:07+00:00"
 }

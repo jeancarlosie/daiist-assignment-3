@@ -1,6 +1,6 @@
 ## reg-2019-945-recitals
    133  Preamble
-  3496  Recitals
+  3491  Recitals
 ## reg-2019-945
     21  Preamble
      4  Chapter I
@@ -75,7 +75,7 @@
    381  Annex > Part 17
 ## reg-2019-947-recitals
    133  Preamble
-  1489  Recitals
+  1487  Recitals
 ## reg-2019-947
     25  Preamble
     31  Article 1
@@ -152,7 +152,7 @@
    272  Annex > Appendix 6
 ## reg-2021-664-recitals
    134  Preamble
-  1761  Recitals
+  1759  Recitals
 ## reg-2021-664
     20  Preamble
      6  Chapter I

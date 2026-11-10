@@ -17,12 +17,19 @@ Two chunking designs are built so evaluate.py can compare them by hit rate:
 Every chunk carries its source, its location (heading path and PDF pages) and
 the list of sections it overlaps, which evaluate.py uses to score hits.
 
-Every vector is appended to index/vectors.jsonl as soon as it arrives, keyed by
-a hash of the exact text embedded. A crash or the daily quota loses nothing,
-and a re-run embeds only what is new.
+Every chunk vector is appended to index/vectors.jsonl as soon as it arrives,
+keyed by a hash of the exact text embedded. A crash or the daily quota loses
+nothing, and a re-run embeds only chunks without a saved vector. Query vectors
+go to index/query_vectors.jsonl, so asking the same question twice is free.
 
-server.py imports search() and add_file() from here. Nothing in this module
-prints to stdout (the MCP server uses stdout for the protocol): logs go to stderr.
+Per-file steps, imported by server.py's add-document tool:
+  chunk_file(path, design)       extract, clean and chunk one file
+  embed_and_store(chunks, design) embed what has no saved vector, store in ChromaDB
+  add_file(path)                 both, with the already-indexed check
+  search(query, k)               the k closest chunks, used by the search tool
+
+Nothing in this module prints to stdout (the MCP server uses stdout for the
+protocol): logs go to stderr.
 """
 
 import argparse
@@ -36,13 +43,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pymupdf
-from bs4 import BeautifulSoup
 
 ROOT = Path(__file__).resolve().parent
 CORPUS_DIR = ROOT / "corpus"
 INDEX_DIR = ROOT / "index"
 CHROMA_DIR = INDEX_DIR / "chroma"
-VECTOR_CACHE = INDEX_DIR / "vectors.jsonl"
+VECTOR_CACHE = INDEX_DIR / "vectors.jsonl"         # chunk vectors
+QUERY_CACHE = INDEX_DIR / "query_vectors.jsonl"    # question vectors
 REGISTRY_FILE = INDEX_DIR / "documents.json"
 STATS_FILE = INDEX_DIR / "corpus_stats.json"
 SECTIONS_FILE = INDEX_DIR / "sections.txt"
@@ -57,7 +64,7 @@ SECTION_MAX_WORDS = 350            # longer sections are split into FIXED_WORDS 
 SECTION_MIN_WORDS = 25             # shorter ones (a heading and its title) are carried into the next section
 MIN_CORPUS_WORDS = 50_000
 MAX_ADD_CHUNKS = 300               # add_file refuses bigger documents: they would eat the daily quota
-SUPPORTED = {".pdf", ".html", ".htm", ".txt", ".md"}
+SUPPORTED = {".pdf", ".txt", ".md"}
 
 EUR_LEX_LICENCE = (
     "© European Union, EUR-Lex. Reuse authorised provided the source is acknowledged "
@@ -86,18 +93,21 @@ SOURCES = {
         "title": "Recitals of Implementing Regulation (EU) 2019/947 (original Official Journal text)",
         "url": "https://eur-lex.europa.eu/eli/reg_impl/2019/947/oj/eng",
         "licence": EUR_LEX_LICENCE,
+        "date": "11.6.2019 (OJ L 152)",
         "recitals_only": True,
     },
     "reg-2019-945-recitals": {
         "title": "Recitals of Delegated Regulation (EU) 2019/945 (original Official Journal text)",
         "url": "https://eur-lex.europa.eu/eli/reg_del/2019/945/oj/eng",
         "licence": EUR_LEX_LICENCE,
+        "date": "11.6.2019 (OJ L 152)",
         "recitals_only": True,
     },
     "reg-2021-664-recitals": {
         "title": "Recitals of Implementing Regulation (EU) 2021/664 (original Official Journal text)",
         "url": "https://eur-lex.europa.eu/eli/reg_impl/2021/664/oj/eng",
         "licence": EUR_LEX_LICENCE,
+        "date": "23.4.2021 (OJ L 139)",
         "recitals_only": True,
     },
     "rd-517-2024": {
@@ -130,7 +140,7 @@ def relative(path: Path) -> str:
 # ---------------------------------------------------------------- extraction
 
 def extract_pages(path: Path) -> list[str]:
-    """The text of each page (one 'page' for HTML and plain text).
+    """The text of each page (one 'page' for a plain-text file).
 
     PDFs are read with PyMuPDF, not pypdf: EUR-Lex justifies its text with extra
     letter spacing, and pypdf turned that into broken words ("a ssemblies",
@@ -141,11 +151,6 @@ def extract_pages(path: Path) -> list[str]:
     if suffix == ".pdf":
         with pymupdf.open(path) as pdf:
             return [page.get_text() for page in pdf]
-    if suffix in (".html", ".htm"):
-        soup = BeautifulSoup(path.read_text(encoding="utf-8", errors="replace"), "html.parser")
-        for tag in soup(["script", "style", "nav", "header", "footer"]):
-            tag.decompose()
-        return [soup.get_text("\n")]
     if suffix in (".txt", ".md"):
         return [path.read_text(encoding="utf-8", errors="replace")]
     raise ValueError(f"Unsupported file type {suffix}; supported: {', '.join(sorted(SUPPORTED))}")
@@ -180,6 +185,7 @@ NOISE_LINES = [
     re.compile(r"^LEGISLACIÓN CONSOLIDADA$"),
     re.compile(r"^Página\s+\d+(\s+de\s+\d+)?$"),
 ]
+LONE_DATE = re.compile(r"^\d{1,2}\.\d{1,2}\.\d{4}$")
 ARTICLE_1 = re.compile(r"^Article 1$")
 # The act's own title, e.g. "COMMISSION IMPLEMENTING REGULATION (EU) 2019/947".
 ACT_TITLE = re.compile(r"^(?:COMMISSION (?:IMPLEMENTING |DELEGATED )?)?REGULATION \(EU\)")
@@ -196,6 +202,9 @@ def clean_lines(pages: list[str]) -> tuple[list[tuple[str, int]], dict]:
         page = page.replace("\xad", "")
         for line in page.splitlines():
             line = unicodedata.normalize("NFKC", line)        # ligatures: "ﬁ" -> "fi"
+            header = EURLEX_HEADER.match(line)
+            if header and "version_date" not in stats:   # "02019R0947 — EN — 01.05.2025 — ..."
+                stats["version_date"] = re.findall(r"\d{2}\.\d{2}\.\d{4}", header.group(0))[0]
             line, n_headers = EURLEX_HEADER.subn("", line)
             line, n_oj = OJ_HEADER.subn("", line)
             stats["headers_removed"] += n_headers + n_oj
@@ -206,6 +215,10 @@ def clean_lines(pages: list[str]) -> tuple[list[tuple[str, int]], dict]:
                 continue
             if any(pattern.match(line) for pattern in NOISE_LINES):
                 stats["noise_lines_removed"] += 1
+                # The header's date, split onto its own line just before, goes too.
+                if lines and lines[-1][1] == page_no and LONE_DATE.match(lines[-1][0]):
+                    lines.pop()
+                    stats["noise_lines_removed"] += 1
                 continue
             lines.append([line, page_no])
 
@@ -311,6 +324,7 @@ def load_document(path: Path) -> dict:
         "title": info.get("title", path.stem),
         "url": info.get("url", relative(path)),
         "licence": info.get("licence", "not recorded"),
+        "date": info.get("date") or cleaning.get("version_date", "not recorded"),
         "file": relative(path),
         "pages": len(pages),
         "words": len(tokens),
@@ -407,6 +421,12 @@ def chunk_document(doc: dict, design: str) -> list[dict]:
     raise ValueError(f"Unknown design {design!r}; expected one of {DESIGNS}")
 
 
+def chunk_file(path: str | Path, design: str = CHOSEN_DESIGN) -> tuple[dict, list[dict]]:
+    """Extract, clean and chunk one file: (document info, chunks)."""
+    doc = load_document(Path(path))
+    return doc, chunk_document(doc, design)
+
+
 def embedding_text(chunk: dict) -> str:
     """Gemini Embedding 2's document format. The structure design also embeds the heading path."""
     heading = chunk["title"] if chunk["design"] == "fixed" else f"{chunk['title']} — {chunk['section']}"
@@ -420,7 +440,7 @@ class QuotaExhausted(RuntimeError):
 
 
 _client = None
-_cache: dict[str, list[float]] | None = None
+_caches: dict[Path, dict[str, list[float]]] = {}
 
 
 def gemini():
@@ -437,18 +457,17 @@ def cache_key(text: str) -> str:
     return hashlib.sha256(f"{EMBED_MODEL}|{EMBED_DIM}|{text}".encode("utf-8")).hexdigest()
 
 
-def load_cache() -> dict[str, list[float]]:
-    global _cache
-    if _cache is None:
-        _cache = {}
-        if VECTOR_CACHE.is_file():
-            for line in VECTOR_CACHE.read_text(encoding="utf-8").splitlines():
+def load_cache(path: Path = VECTOR_CACHE) -> dict[str, list[float]]:
+    if path not in _caches:
+        cache = _caches[path] = {}
+        if path.is_file():
+            for line in path.read_text(encoding="utf-8").splitlines():
                 try:
                     record = json.loads(line)
-                    _cache[record["key"]] = record["v"]
+                    cache[record["key"]] = record["v"]
                 except (json.JSONDecodeError, KeyError):
                     continue  # a line cut short by a crash; that text is simply embedded again
-    return _cache
+    return _caches[path]
 
 
 def retry_delay(error: Exception) -> float | None:
@@ -485,16 +504,16 @@ def call_embed(texts: list[str]) -> list[list[float]]:
     raise RuntimeError("unreachable")
 
 
-def embed_texts(texts: list[str]) -> list[list[float]]:
+def embed_texts(texts: list[str], cache_path: Path = VECTOR_CACHE) -> list[list[float]]:
     """A vector per text, from the cache when possible. New vectors are saved batch by batch."""
-    cache = load_cache()
+    cache = load_cache(cache_path)
     keys = [cache_key(t) for t in texts]
     missing = list(dict.fromkeys(t for t, k in zip(texts, keys) if k not in cache))
     if missing:
-        VECTOR_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
         if len(missing) > 1:
             log(f"Embedding {len(missing)} new text(s) with {EMBED_MODEL} ...")
-        with VECTOR_CACHE.open("a", encoding="utf-8") as f:
+        with cache_path.open("a", encoding="utf-8") as f:
             for i in range(0, len(missing), EMBED_BATCH):
                 batch = missing[i:i + EMBED_BATCH]
                 for text, vector in zip(batch, call_embed(batch)):
@@ -509,7 +528,7 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
 
 def embed_query(query: str) -> list[float]:
     """Gemini Embedding 2's query format for question answering (task_type is not supported)."""
-    return embed_texts([f"task: question answering | query: {query}"])[0]
+    return embed_texts([f"task: question answering | query: {query}"], QUERY_CACHE)[0]
 
 
 def count_missing(chunks: list[dict]) -> int:
@@ -536,12 +555,17 @@ def collection(design: str):
 METADATA_FIELDS = ("source", "title", "design", "section", "sections", "location", "page_start", "page_end", "words")
 
 
-def store(chunks: list[dict], design: str, prune_sources: set[str] | None = None) -> None:
-    """Embed (what is not cached) and upsert. With prune_sources, delete those sources' old chunks."""
+def embed_and_store(chunks: list[dict], design: str, prune_sources: set[str] | None = None) -> None:
+    """Embed what has no saved vector, and write new or changed chunks to ChromaDB.
+    With prune_sources, delete those sources' chunks that no longer exist."""
     col = collection(design)
-    vectors = embed_texts([embedding_text(c) for c in chunks])
-    for i in range(0, len(chunks), 200):
-        batch = chunks[i:i + 200]
+    stored = col.get(ids=[c["id"] for c in chunks], include=["documents", "metadatas"])
+    stored = {i: (d, m) for i, d, m in zip(stored["ids"], stored["documents"], stored["metadatas"])}
+    todo = [c for c in chunks
+            if stored.get(c["id"]) != (c["text"], {k: c[k] for k in METADATA_FIELDS})]
+    vectors = embed_texts([embedding_text(c) for c in todo])
+    for i in range(0, len(todo), 200):
+        batch = todo[i:i + 200]
         col.upsert(
             ids=[c["id"] for c in batch],
             embeddings=vectors[i:i + 200],
@@ -568,7 +592,7 @@ def register(doc: dict, path: Path, origin: str, chunks_by_design: dict[str, int
     registry = load_registry()
     previous = registry.get(doc["source"], {}).get("chunks", {})
     registry[doc["source"]] = {
-        "title": doc["title"], "url": doc["url"], "licence": doc["licence"], "file": doc["file"],
+        "title": doc["title"], "url": doc["url"], "date": doc["date"], "licence": doc["licence"], "file": doc["file"],
         "sha256": file_sha(path), "pages": doc["pages"], "words": doc["words"], "origin": origin,
         "chunks": {**previous, **chunks_by_design}, "indexed_at": now(),
     }
@@ -577,17 +601,14 @@ def register(doc: dict, path: Path, origin: str, chunks_by_design: dict[str, int
 
 # ---------------------------------------------------------------- search and add (used by server.py)
 
-def search(query: str, k: int = 5, design: str | None = None, source: str | None = None) -> list[dict]:
+def search(query: str, k: int = 5, design: str | None = None) -> list[dict]:
     """The k chunks closest to the query, best first, with their metadata and a cosine score."""
     col = collection(design or CHOSEN_DESIGN)
     total = col.count()
     if total == 0:
         raise RuntimeError("The index is empty. Run `uv run python main.py index` first.")
-    kwargs = {"query_embeddings": [embed_query(query)], "n_results": min(k, total),
-              "include": ["documents", "metadatas", "distances"]}
-    if source:
-        kwargs["where"] = {"source": source}
-    result = col.query(**kwargs)
+    result = col.query(query_embeddings=[embed_query(query)], n_results=min(k, total),
+                       include=["documents", "metadatas", "distances"])
     return [
         {"id": chunk_id, "score": round(1 - distance, 4), "text": text, **meta}
         for chunk_id, text, meta, distance in zip(
@@ -617,15 +638,14 @@ def add_file(path: str | Path, design: str | None = None) -> dict:
             return {"status": "already_indexed", "source": source, "title": info["title"],
                     "chunks": info["chunks"][design], "message": "This exact file is already in the index; nothing was changed."}
 
-    doc = load_document(path)
-    chunks = chunk_document(doc, design)
+    doc, chunks = chunk_file(path, design)
     if not chunks:
         return {"status": "error", "message": "No text could be extracted from this file (is it a scanned PDF?)."}
     if len(chunks) > MAX_ADD_CHUNKS:
         return {"status": "error", "message": f"{len(chunks)} chunks is more than the {MAX_ADD_CHUNKS} allowed "
                                               "per added document (the free tier embeds about 1,000 texts a day)."}
     replaced = doc["source"] in registry
-    store(chunks, design, prune_sources={doc["source"]})
+    embed_and_store(chunks, design, prune_sources={doc["source"]})
     register(doc, path, origin="corpus" if path.parent == CORPUS_DIR else "added", chunks_by_design={design: len(chunks)})
     return {"status": "replaced" if replaced else "added", "source": doc["source"], "title": doc["title"],
             "words": doc["words"], "chunks": len(chunks), "design": design}
@@ -661,7 +681,7 @@ def write_outputs(docs: list[dict], chunks: dict[str, list[dict]]) -> dict:
 
     stats = {
         "documents": [
-            {key: doc[key] for key in ("source", "title", "url", "licence", "file", "pages", "words", "cleaning")}
+            {key: doc[key] for key in ("source", "title", "url", "date", "licence", "file", "pages", "words", "cleaning")}
             | {"chunks": {d: sum(c["source"] == doc["source"] for c in chunks[d]) for d in chunks}}
             for doc in docs
         ],
@@ -710,7 +730,7 @@ def build(dry_run: bool = False) -> None:
     sources = {doc["source"] for doc in docs}
     for design in DESIGNS:
         log(f"\n[{design}]")
-        store(chunks[design], design, prune_sources=sources)
+        embed_and_store(chunks[design], design, prune_sources=sources)
     for doc, path in zip(docs, files):
         register(doc, path, origin="corpus",
                  chunks_by_design={d: sum(c["source"] == doc["source"] for c in chunks[d]) for d in DESIGNS})
