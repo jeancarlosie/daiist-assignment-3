@@ -114,6 +114,7 @@ SOURCES = {
         "title": "Real Decreto 517/2024 (Spain, civil use of unmanned aircraft systems)",
         "url": "https://boe.es/buscar/pdf/2024/BOE-A-2024-11377-consolidado.pdf",
         "licence": "Fuente de los datos: Agencia Estatal Boletín Oficial del Estado (BOE reuse conditions).",
+        "date": "5.6.2024 (BOE núm. 136), consolidated text",
     },
 }
 
@@ -274,11 +275,12 @@ HEADINGS = [
     (1, "Appendix", r"^Appendix\s+(?P<n>\d+|[IVXLC]+)$"),
     (2, "Section", r"^SECTION\s+(?P<n>\d+)(?:\s|$)"),
     (2, "Section", r"^Section\s+(?P<n>\d+)$"),
+    (2, "Sección", r"^Sección\s+(?P<n>\d+\.[ªa])(?:\s|$)"),
     (3, "Recitals", r"^Whereas:?$"),       # same level as Article, so Article 1 closes it
     (3, "Article", r"^Article\s+(?P<n>\d+[a-z]?)$"),
     (3, "Artículo", r"^Artículo\s+(?P<n>\d+(?:\s+bis)?)\."),
     (3, "", r"^(?P<n>UAS\.[A-Z]+(?:-\d{2})?\.\d{3})\s+[A-Z]"),   # annex points: UAS.OPEN.030
-    (3, "Disposición", r"^Disposición\s+(?P<n>(?:adicional|transitoria|derogatoria|final)\s+\w+)"),
+    (0, "Disposición", r"^Disposición\s+(?P<n>(?:adicional|transitoria|derogatoria|final)\s+\w+)"),  # after the last chapter, not in it
 ]
 HEADINGS = [(level, label, re.compile(pattern)) for level, label, pattern in HEADINGS]
 
@@ -601,13 +603,15 @@ def register(doc: dict, path: Path, origin: str, chunks_by_design: dict[str, int
 
 # ---------------------------------------------------------------- search and add (used by server.py)
 
-def search(query: str, k: int = 5, design: str | None = None) -> list[dict]:
-    """The k chunks closest to the query, best first, with their metadata and a cosine score."""
+def search(query: str, k: int = 5, design: str | None = None, sources: list[str] | None = None) -> list[dict]:
+    """The k chunks closest to the query, best first, with their metadata and a cosine score.
+    `sources` limits the search to those documents (evaluate.py scores the corpus only)."""
     col = collection(design or CHOSEN_DESIGN)
     total = col.count()
     if total == 0:
         raise RuntimeError("The index is empty. Run `uv run python main.py index` first.")
     result = col.query(query_embeddings=[embed_query(query)], n_results=min(k, total),
+                       where={"source": {"$in": sources}} if sources else None,
                        include=["documents", "metadatas", "distances"])
     return [
         {"id": chunk_id, "score": round(1 - distance, 4), "text": text, **meta}
