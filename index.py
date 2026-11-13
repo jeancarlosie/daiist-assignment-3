@@ -52,7 +52,6 @@ VECTOR_CACHE = INDEX_DIR / "vectors.jsonl"         # chunk vectors
 QUERY_CACHE = INDEX_DIR / "query_vectors.jsonl"    # question vectors
 REGISTRY_FILE = INDEX_DIR / "documents.json"
 STATS_FILE = INDEX_DIR / "corpus_stats.json"
-SECTIONS_FILE = INDEX_DIR / "sections.txt"
 
 EMBED_MODEL = "gemini-embedding-2"
 EMBED_DIM = 768          # MRL truncation: a quarter of the storage, almost the same quality
@@ -675,14 +674,6 @@ def write_outputs(docs: list[dict], chunks: dict[str, list[dict]]) -> dict:
             for chunk in design_chunks:
                 f.write(json.dumps(chunk, ensure_ascii=False) + "\n")
 
-    with SECTIONS_FILE.open("w", encoding="utf-8") as f:   # to check heading detection by eye
-        for doc in docs:
-            f.write(f"## {doc['source']}\n")
-            counts: dict[str, int] = {}
-            for _, _, section in doc["tokens"]:
-                counts[section] = counts.get(section, 0) + 1
-            f.writelines(f"{n:>6}  {section}\n" for section, n in counts.items())
-
     stats = {
         "documents": [
             {key: doc[key] for key in ("source", "title", "url", "date", "licence", "file", "pages", "words", "cleaning")}
@@ -728,7 +719,7 @@ def build(dry_run: bool = False) -> None:
     pending = {design: count_missing(chunks[design]) for design in DESIGNS}
     log(f"\nTexts still to embed: {pending} (free tier: about 1,000 a day).")
     if dry_run:
-        log("Dry run: nothing embedded. Check index/sections.txt and index/chunks_*.jsonl.")
+        log("Dry run: nothing embedded. Check index/chunks_*.jsonl.")
         return
 
     sources = {doc["source"] for doc in docs}

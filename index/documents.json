@@ -94,5 +94,20 @@
       "fixed": 30
     },
     "indexed_at": "2026-11-10T18:51:04+00:00"
+  },
+  "rd-517-2024": {
+    "title": "Real Decreto 517/2024 (Spain, civil use of unmanned aircraft systems)",
+    "url": "https://boe.es/buscar/pdf/2024/BOE-A-2024-11377-consolidado.pdf",
+    "date": "5.6.2024 (BOE núm. 136), consolidated text",
+    "licence": "Fuente de los datos: Agencia Estatal Boletín Oficial del Estado (BOE reuse conditions).",
+    "file": "extra/rd-517-2024.pdf",
+    "sha256": "cc18ad6243f41cd726b1a12ab3be54880ebadbb0978c06ebf643c8d1b8ef6338",
+    "pages": 71,
+    "words": 38467,
+    "origin": "added",
+    "chunks": {
+      "structure": 209
+    },
+    "indexed_at": "2026-11-12T23:32:05+00:00"
   }
 }

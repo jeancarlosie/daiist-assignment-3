@@ -1,0 +1,75 @@
+{
+  "questions": 37,
+  "by_kind": {
+    "single": 25,
+    "multi": 6,
+    "unanswerable": 6
+  },
+  "outcomes": {
+    "correct": 30,
+    "unsupported": 1,
+    "correct refusal": 6
+  },
+  "code_checks": {
+    "searched": 37,
+    "citations_valid": 37,
+    "answers_without_citation": 0,
+    "retrieved_expected": 29,
+    "cited_expected": 28,
+    "guardrail_fired": 2
+  },
+  "suggested_failure_causes": {
+    "unsupported claim": 1
+  },
+  "cost_per_question": {
+    "agent_tokens_in": 7100.9,
+    "agent_tokens_out": 183.5,
+    "agent_seconds": 7.5,
+    "agent_model_calls": 2.4,
+    "judge_tokens": 3845.5,
+    "answers_graded_by_judge": 31,
+    "answers_graded_in_code": 6
+  },
+  "judge_vs_human": {
+    "graded": 23,
+    "agree_correct": 0.913,
+    "agree_supported": 0.913,
+    "agree_both": 0.87,
+    "disagreements": [
+      {
+        "id": "q02",
+        "human_correct": true,
+        "judge_correct": true,
+        "human_supported": true,
+        "judge_supported": false
+      },
+      {
+        "id": "q12",
+        "human_correct": false,
+        "judge_correct": true,
+        "human_supported": false,
+        "judge_supported": true
+      },
+      {
+        "id": "q30",
+        "human_correct": false,
+        "judge_correct": true,
+        "human_supported": true,
+        "judge_supported": true
+      }
+    ]
+  },
+  "retrieval": {
+    "structure": {
+      "@1": 0.548,
+      "@3": 0.903,
+      "@5": 0.935
+    },
+    "fixed": {
+      "@1": 0.516,
+      "@3": 0.871,
+      "@5": 0.935
+    },
+    "best_design": "structure"
+  }
+}

@@ -7,19 +7,17 @@ Assignment 3: evaluation (`main.py evaluate`).
                                                                -> eval/answers.jsonl
   3. Code checks citations valid (each one names a passage search returned),
                  refusal or not, expected passage retrieved and cited
-  4. Judge       a stronger Gemini model grades correctness against the
-                 reference answer and support against the retrieved text
+  4. Judge       refusals are graded in code; a stronger Gemini model grades
+                 the other answers: correctness against the reference answer
+                 and support against the retrieved text
                                                                -> eval/verdicts.jsonl
   5. Agreement   judge vs your grades in eval/human_labels.csv
   6. Summary     outcomes, failure causes, cost per question
-                 -> eval/results.csv, eval/summary.json, eval/grading_sheet.md
+                 -> eval/results.csv, eval/summary.json
 
 Answers and verdicts are saved one by one and reused on the next run, so a
 crash or the daily quota loses nothing, and grading your 20+ answers does not
 change them. Delete eval/answers.jsonl (and eval/verdicts.jsonl) to start over.
-
-eval/grading_sheet.md shows each answer with its passages but not the judge's
-verdict: grade from it before opening eval/verdicts.jsonl or eval/results.csv.
 """
 
 import asyncio
@@ -263,12 +261,25 @@ async def run_judge(questions: list[dict], answers: dict[str, dict]) -> dict[str
     judge = ChatGoogleGenerativeAI(model=JUDGE_MODEL, temperature=0).with_structured_output(Verdict, include_raw=True)
     for q in stale:
         run = answers[q["id"]]
+        if run["refusal"]:
+            # A refusal is checked in code, as the brief asks: it is correct exactly when the
+            # question is unanswerable, and supported when any citation it adds is valid.
+            checks = code_checks(q, run)
+            verdicts[q["id"]] = {"id": q["id"], "answer": run["answer"], "graded_by": "code",
+                                 "reasoning": "Refusal, checked in code: correct if the question is unanswerable; "
+                                              "supported if every citation names a retrieved passage.",
+                                 "correct": q["kind"] == "unanswerable", "supported": checks["citations_valid"],
+                                 "tokens": 0, "seconds": 0}
+            with VERDICTS.open("a", encoding="utf-8") as f:
+                f.write(json.dumps(verdicts[q["id"]], ensure_ascii=False) + "\n")
+            log(f"  {q['id']} checked in code (refusal)")
+            continue
         prompt = JUDGE_PROMPT.format(kind=q["kind"], question=q["question"], reference=q["reference_answer"],
                                      evidence=evidence_of(run), answer=run["answer"])
         started = time.time()
         out = await with_retries(lambda: judge.ainvoke(prompt), f"judge {q['id']}")
         usage = getattr(out["raw"], "usage_metadata", None) or {}
-        verdicts[q["id"]] = {"id": q["id"], "answer": run["answer"], **out["parsed"].model_dump(),
+        verdicts[q["id"]] = {"id": q["id"], "answer": run["answer"], "graded_by": "judge", **out["parsed"].model_dump(),
                              "tokens": usage.get("input_tokens", 0) + usage.get("output_tokens", 0),
                              "seconds": round(time.time() - started, 1)}
         with VERDICTS.open("a", encoding="utf-8") as f:
@@ -341,22 +352,6 @@ def agreement(verdicts: dict[str, dict]) -> dict | None:
 
 # ---------------------------------------------------------------- 6. outputs
 
-def write_grading_sheet(questions: list[dict], answers: dict[str, dict]) -> None:
-    """Everything needed to grade an answer by hand, and nothing about the judge's verdict."""
-    out = ["# Grading sheet", "",
-           "Grade each answer in eval/human_labels.csv (id, correct, supported, notes) before opening "
-           "eval/verdicts.jsonl or eval/results.csv.", "",
-           "- correct = 1 if it matches the reference answer, or properly says the documents do not cover it",
-           "- supported = 1 if every claim is in the passages the assistant retrieved", ""]
-    for q in questions:
-        run = answers[q["id"]]
-        out += [f"## {q['id']} ({q['kind']})", "", f"**Question:** {q['question']}", "",
-                f"**Reference:** {q['reference_answer']}", "", "**Answer:**", "", run["answer"], "",
-                "<details><summary>Retrieved passages</summary>", "", "```", evidence_of(run), "```", "",
-                "</details>", ""]
-    (EVAL / "grading_sheet.md").write_text("\n".join(out), encoding="utf-8")
-
-
 def summarise(questions, retrieval, answers, verdicts) -> None:
     results = {}
     for q in questions:
@@ -365,6 +360,7 @@ def summarise(questions, retrieval, answers, verdicts) -> None:
         result = outcome(q, checks, verdict)
         results[q["id"]] = {"id": q["id"], "kind": q["kind"], "outcome": result,
                             "suggested_cause": suggested_cause(q, checks, result), **checks,
+                            "graded_by": verdict.get("graded_by", "judge"),
                             "judge_correct": verdict["correct"], "judge_supported": verdict["supported"],
                             "guardrail": run["guardrail"]["outcome"] if run["guardrail"] else "",
                             "model_calls": run["model_calls"], "tokens_in": run["tokens"]["input"],
@@ -384,6 +380,7 @@ def summarise(questions, retrieval, answers, verdicts) -> None:
         if r["suggested_cause"]:
             causes[r["suggested_cause"]] = causes.get(r["suggested_cause"], 0) + 1
     mean = lambda key: round(sum(r[key] for r in results.values()) / n, 1)  # noqa: E731
+    judged = [v for v in verdicts.values() if v.get("graded_by", "judge") == "judge"]
     agree = agreement(verdicts)
     summary = {
         "questions": n,
@@ -400,7 +397,8 @@ def summarise(questions, retrieval, answers, verdicts) -> None:
         "suggested_failure_causes": causes,
         "cost_per_question": {"agent_tokens_in": mean("tokens_in"), "agent_tokens_out": mean("tokens_out"),
                               "agent_seconds": mean("seconds"), "agent_model_calls": mean("model_calls"),
-                              "judge_tokens": round(sum(v["tokens"] for v in verdicts.values()) / n, 1)},
+                              "judge_tokens": round(sum(v["tokens"] for v in judged) / max(len(judged), 1), 1),
+                              "answers_graded_by_judge": len(judged), "answers_graded_in_code": n - len(judged)},
         "judge_vs_human": agree,
         "retrieval": {d: retrieval[d]["hit_rate"] for d in index.DESIGNS} | {"best_design": retrieval["best_design"]},
     }
@@ -414,14 +412,15 @@ def summarise(questions, retrieval, answers, verdicts) -> None:
         log("Suggested failure causes (check each by hand): " + ", ".join(f"{v} {k}" for k, v in causes.items()))
     c = summary["cost_per_question"]
     log(f"Cost per question: {c['agent_tokens_in'] + c['agent_tokens_out']:,.0f} agent tokens, "
-        f"{c['agent_seconds']} s, {c['agent_model_calls']} model calls; judge {c['judge_tokens']:,.0f} tokens")
+        f"{c['agent_seconds']} s, {c['agent_model_calls']} model calls; judge {c['judge_tokens']:,.0f} tokens "
+        f"per judged answer ({c['answers_graded_by_judge']} by the judge, {c['answers_graded_in_code']} in code)")
     if agree:
         log(f"Judge vs your grades ({agree['graded']} answers): correct {agree['agree_correct']:.0%}, "
             f"supported {agree['agree_supported']:.0%}, both {agree['agree_both']:.0%}")
     else:
-        log("Judge vs your grades: grade 20+ answers in eval/human_labels.csv from eval/grading_sheet.md, "
-            "then run again (answers and verdicts are reused, so it costs nothing).")
-    log("Saved: eval/retrieval.json, answers.jsonl, verdicts.jsonl, results.csv, summary.json, grading_sheet.md")
+        log("Judge vs your grades: grade 20+ answers in eval/human_labels.csv, then run again "
+            "(answers and verdicts are reused, so it costs nothing).")
+    log("Saved: eval/retrieval.json, answers.jsonl, verdicts.jsonl, results.csv, summary.json")
 
 
 async def main() -> None:
@@ -429,7 +428,6 @@ async def main() -> None:
     log(f"{len(questions)} questions. Retrieval ...")
     retrieval = evaluate_retrieval(questions)
     answers = await run_agent(questions)
-    write_grading_sheet(questions, answers)
     verdicts = await run_judge(questions, answers)
     summarise(questions, retrieval, answers, verdicts)
 

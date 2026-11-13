@@ -1,0 +1,38 @@
+id,kind,outcome,suggested_cause,searched,refusal,n_citations,citations_valid,cites_something,retrieved_expected,cited_expected,graded_by,judge_correct,judge_supported,guardrail,model_calls,tokens_in,tokens_out,seconds
+q01,single,correct,,True,False,1,True,True,True,False,judge,True,True,,2,4437,267,15.1
+q02,single,unsupported,unsupported claim,True,False,1,True,True,True,True,judge,True,False,,3,10450,210,8.4
+q03,single,correct,,True,False,1,True,True,True,True,judge,True,True,,2,4802,178,3.5
+q04,single,correct,,True,False,1,True,True,True,True,judge,True,True,,2,4733,135,7.3
+q05,single,correct,,True,False,1,True,True,True,True,judge,True,True,retried,4,14624,543,10.4
+q06,single,correct,,True,False,1,True,True,True,True,judge,True,True,,2,4773,115,5.0
+q07,single,correct,,True,False,1,True,True,True,True,judge,True,True,,2,4672,237,13.8
+q08,single,correct,,True,False,1,True,True,True,True,judge,True,True,,2,4100,160,2.1
+q09,single,correct,,True,False,1,True,True,True,True,judge,True,True,,2,4391,62,6.2
+q10,single,correct,,True,False,1,True,True,True,True,judge,True,True,,2,4785,65,13.0
+q11,single,correct,,True,False,1,True,True,True,True,judge,True,True,,2,4775,74,3.4
+q12,single,correct,,True,False,3,True,True,False,False,judge,True,True,,3,9942,279,13.8
+q13,single,correct,,True,False,1,True,True,True,True,judge,True,True,,3,9435,227,7.6
+q14,single,correct,,True,False,1,True,True,True,True,judge,True,True,,2,4768,114,7.9
+q15,single,correct,,True,False,1,True,True,True,True,judge,True,True,,4,17993,129,18.3
+q16,single,correct,,True,False,1,True,True,True,True,judge,True,True,,2,4834,89,2.2
+q17,single,correct,,True,False,2,True,True,True,True,judge,True,True,,4,17951,326,17.7
+q18,single,correct,,True,False,1,True,True,True,True,judge,True,True,,2,4739,172,2.5
+q19,single,correct,,True,False,1,True,True,True,True,judge,True,True,,2,4522,226,5.9
+q20,single,correct,,True,False,2,True,True,True,True,judge,True,True,retried,4,13885,666,10.2
+q21,single,correct,,True,False,1,True,True,True,True,judge,True,True,,2,4975,97,4.5
+q22,single,correct,,True,False,1,True,True,True,True,judge,True,True,,2,4489,133,9.9
+q23,single,correct,,True,False,2,True,True,True,True,judge,True,True,,2,4481,369,6.5
+q24,single,correct,,True,False,1,True,True,False,False,judge,True,True,,2,4697,84,7.6
+q25,single,correct,,True,False,1,True,True,True,True,judge,True,True,,2,4492,196,7.9
+q26,multi,correct,,True,False,2,True,True,True,True,judge,True,True,,3,10142,215,7.8
+q27,multi,correct,,True,False,2,True,True,True,True,judge,True,True,,3,10552,242,8.4
+q28,multi,correct,,True,False,2,True,True,True,True,judge,True,True,,2,4673,154,3.0
+q29,multi,correct,,True,False,2,True,True,True,True,judge,True,True,,2,6854,180,4.7
+q30,multi,correct,,True,False,2,True,True,True,True,judge,True,True,,3,9634,234,13.1
+q31,multi,correct,,True,False,2,True,True,True,True,judge,True,True,,2,6854,155,4.6
+q32,unanswerable,correct refusal,,True,True,1,True,True,,,code,True,True,,3,7072,101,3.7
+q33,unanswerable,correct refusal,,True,True,0,True,True,,,code,True,True,,2,4780,27,6.6
+q34,unanswerable,correct refusal,,True,True,1,True,True,,,code,True,True,,3,10460,115,4.1
+q35,unanswerable,correct refusal,,True,True,1,True,True,,,code,True,True,,2,4748,102,5.8
+q36,unanswerable,correct refusal,,True,True,1,True,True,,,code,True,True,,2,4462,86,1.9
+q37,unanswerable,correct refusal,,True,True,0,True,True,,,code,True,True,,2,4759,27,2.0
